@@ -14,7 +14,7 @@ def home_page():
 def about_page():
     return render_template('about.html')
 
-@app.route("/contact", methods=['POST','GET']
+@app.route("/contact", methods=['POST','GET'])
 def contact_page():
     if request.method == 'POST':
         print(request.form['name'])
