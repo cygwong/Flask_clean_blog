@@ -66,7 +66,19 @@ def make_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for('get_all_posts'))
-    return render_template('make-post.html', form=form)
+    return render_template('make-post.html', form=form, is_edit=False)
+
+@app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
+def edit_post(post_id):
+    post = BlogPost.query.get(post_id)
+    edit_form = CreatePostForm(
+    title=post.title,
+    subtitle=post.subtitle,
+    img_url=post.img_url,
+    author=post.author,
+    body=post.body
+    )
+    return render_template("make-post.html", form=edit_form, is_edit=True)
 
 
 @app.route("/about")
