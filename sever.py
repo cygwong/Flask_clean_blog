@@ -1,40 +1,69 @@
-from flask import Flask, render_template, request
-import requests
+from flask import Flask, render_template, redirect, url_for
+from flask_bootstrap import Bootstrap
+from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired, URL
+from flask_ckeditor import CKEditor, CKEditorField
+
+
+## Delete this code:
+# import requests
+# posts = requests.get("https://api.npoint.io/43644ec4f0013682fc0d").json()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+ckeditor = CKEditor(app)
+Bootstrap(app)
 
-blog_url = "https://api.npoint.io/52d4bbc652a10f84d851"
-blog_json = requests.get(blog_url).json()
+##CONNECT TO DB
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-@app.route("/")
-def home_page():
-    return render_template('index.html', blogs_json = blog_json)
+##CONFIGURE TABLE
+class BlogPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(250), unique=True, nullable=False)
+    subtitle = db.Column(db.String(250), nullable=False)
+    date = db.Column(db.String(250), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    author = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(250), nullable=False)
 
-@app.route("/about")
-def about_page():
-    return render_template('about.html')
 
-@app.route("/contact", methods=['POST','GET'])
-def contact_page():
-    if request.method == 'POST':
-        print(request.form['name'])
-        print(request.form['email'])
-        print(request.form['phone'])
-        print(request.form['message'])
-        return render_template('contact.html', mess_sent = True)
-    return render_template('contact.html', mess_sent = False)
+##WTForm
+class CreatePostForm(FlaskForm):
+    title = StringField("Blog Post Title", validators=[DataRequired()])
+    subtitle = StringField("Subtitle", validators=[DataRequired()])
+    author = StringField("Your Name", validators=[DataRequired()])
+    img_url = StringField("Blog Image URL", validators=[DataRequired(), URL()])
+    body = StringField("Blog Content", validators=[DataRequired()])
+    submit = SubmitField("Submit Post")
+
+
+@app.route('/')
+def get_all_posts():
+    return render_template("index.html", all_posts=posts)
 
 
 @app.route("/post/<int:index>")
-def post_page(index):
+def show_post(index):
     requested_post = None
-    for blog in blog_json:
-        if blog['id'] == index:
-            requested_post = blog
-    return render_template('post.html', blog_content = requested_post)
+    for blog_post in posts:
+        if blog_post["id"] == index:
+            requested_post = blog_post
+    return render_template("post.html", post=requested_post)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
-#finding out where place I commit to
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', port=5000)
