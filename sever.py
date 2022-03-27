@@ -36,3 +36,5 @@ def post_page(index):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+#finding out where place I commit to
